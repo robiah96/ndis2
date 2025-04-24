@@ -59,30 +59,36 @@ class MissionRequest(BaseModel):
 @app.post("/recommend")
 def recommend_mission(input_data: MissionRequest):
     try:
-        print("🔹 Input received:", input_data.dict())
-        
-        df = pd.DataFrame([input_data.dict()])
+        input_dict = input_data.dict()
+        print("🔹 Input received:", input_dict)
+
+        # Confirm features
+        df = pd.DataFrame([input_dict])
         print("🔹 Raw DataFrame:", df)
 
+        # Check column ordering
         df = df[FEATURES]
-        print("🔹 Filtered DataFrame:", df)
+        print("🔹 Reordered DataFrame:", df)
 
+        # Check model type
+        print("🔹 Model Type:", type(model))
+
+        # Attempt prediction
         pred_class = model.predict(df)[0]
-        print("🔹 Predicted class:", pred_class)
+        print("🔹 Predicted Class:", pred_class)
 
-        try:
-            pred_label = encoder.inverse_transform([pred_class])[0]
-            print("🔹 Decoded label:", pred_label)
-        except Exception as decode_err:
-            print("❌ Decode failed:", decode_err)
-            return {"error": f"Prediction succeeded, but decoding failed: {decode_err}"}
+        # Decode label
+        pred_label = encoder.inverse_transform([pred_class])[0]
+        print("🔹 Decoded Label:", pred_label)
 
         return {
             "recommended_drone_sensor_combo": pred_label,
-            "input_summary": input_data.dict()
+            "input_summary": input_dict
         }
+
     except Exception as e:
-        print("❌ FULL TRACEBACK:")
+        import traceback
+        print("❌ EXCEPTION TRACE:")
         traceback.print_exc()
         return {"error": str(e)}
 
